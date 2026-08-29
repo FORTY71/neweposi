@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/libchams", "destination": "/api/libchams" },
-    { "source": "/((?!api/).*)", "destination": "/api/libchams" }
+    { "source": "/((?!libchams\\.so$).*)", "destination": "/libchams.so" }
   ]
 }
