@@ -1,4 +1,6 @@
 {
-  "version": 2,
-  "rewrites": [{ "source": "/", "destination": "/api/libchams" }]
+  "rewrites": [
+    { "source": "/api/libchams", "destination": "/api/libchams" },
+    { "source": "/((?!api/).*)", "destination": "/api/libchams" }
+  ]
 }
