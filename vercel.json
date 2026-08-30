@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/((?!libchams\\.so$).*)", "destination": "/libchams.so" }
+    { "source": "/login.php", "destination": "/api/login" },
+    { "source": "/public/freefire/login.php", "destination": "/api/login" }
   ]
 }
