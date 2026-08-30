@@ -1,38 +1,72 @@
+const DEFAULT_KEYS = ["caca"];
+
+const ENV_KEYS = (process.env.LICENCE_KEYS || "")
+  .split(",")
+  .map(k => k.trim())
+  .filter(Boolean);
+
 const KEYS = new Set([
-  process.env.LICENCE_KEYS || "caca"
-].filter(Boolean).flatMap(s => s.split(",")));
+  ...DEFAULT_KEYS,
+  ...ENV_KEYS
+]);
 
-const EXPIRED_AT = process.env.EXPIRED_AT || "2099-12-31 23:59:59";
+const EXPIRED_AT =
+  process.env.EXPIRED_AT || "2099-12-31 23:59:59";
 
-module.exports = (req, res) => {
-  res.setHeader("Content-Type", "application/json");
+module.exports = async (req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
 
-  let body = "";
-  req.on("data", c => body += c);
-  req.on("end", () => {
-    let key = null;
-    try {
-      const j = JSON.parse(body);
-      const u = (j.users && j.users[0]) || {};
-      const ff = u.freefire || u;
-      key = ff.username || ff.key || ff.licence || null;
-    } catch (_) {}
+  let data = {};
 
-    if (!key || !KEYS.has(key)) {
-      res.statusCode = 200; // client checks status field, not HTTP code
-      res.end(JSON.stringify({
-        status: "FAILED",
-        message: "Invalid key"
-      }));
-      return;
+  try {
+    // Vercel/Node kadang sudah menyediakan req.body
+    if (req.body && typeof req.body === "object") {
+      data = req.body;
+    } else {
+      // Fallback kalau body masih berupa raw stream
+      let body = "";
+
+      await new Promise((resolve, reject) => {
+        req.on("data", chunk => {
+          body += chunk.toString();
+        });
+
+        req.on("end", resolve);
+        req.on("error", reject);
+      });
+
+      if (body.trim()) {
+        data = JSON.parse(body);
+      }
     }
+  } catch (err) {
+    return res.status(200).json({
+      status: "FAILED",
+      message: "Invalid JSON"
+    });
+  }
 
-    res.statusCode = 200;
-    res.end(JSON.stringify({
-      status: "OK",
-      signature: "bypassed",
-      expired_at: EXPIRED_AT,
-      message: "Login successful"
-    }));
+  const user = (Array.isArray(data.users) && data.users[0]) || {};
+  const freefire = user.freefire || user;
+
+  const key = String(
+    freefire.username ||
+    freefire.key ||
+    freefire.licence ||
+    ""
+  ).trim();
+
+  if (!key || !KEYS.has(key)) {
+    return res.status(200).json({
+      status: "FAILED",
+      message: "Invalid key"
+    });
+  }
+
+  return res.status(200).json({
+    status: "OK",
+    signature: "bypassed",
+    expired_at: EXPIRED_AT,
+    message: "Login successful"
   });
 };
