@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/login.php", "destination": "/api/login" },
-    { "source": "/public/freefire/login.php", "destination": "/api/login" }
+    { "source": "/public/freefire/login.php", "destination": "/api/login" },
+    { "source": "/clientsync.php", "destination": "/api/clientsync" },
+    { "source": "/public/freefire/clientsync.php", "destination": "/api/clientsync" }
   ]
 }
